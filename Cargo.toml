@@ -1,0 +1,12 @@
+[package]
+name = "besta-fera"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bollard = "0.18.1"
+poise = "0.6.1"
+strum = { version = "0.26", features = ["derive"] }
+tokio = { version = "1.42.0", features = ["full"] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["fmt", "env-filter"] }
