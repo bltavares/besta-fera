@@ -42,5 +42,5 @@ docker run -d --name besta-fera \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -e DISCORD_TOKEN=your_token \
     --restart unless-stopped \
-    bltavares/besta-fera
+    ghcr.io/bltavares/besta-fera:latest
 ```
