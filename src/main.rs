@@ -2,6 +2,7 @@ use std::{collections::HashMap, str::FromStr};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
 use bollard::container;
+use futures_util::TryStreamExt;
 use poise::{
     serenity_prelude::{self as serenity, CreateEmbed},
     CreateReply,
@@ -30,16 +31,16 @@ impl MinecraftDocker for bollard::Docker {
         let mut response = HashMap::with_capacity(containers.len());
         for container in containers {
             if let (Some(names), Some(status)) = (container.names, container.status) {
-                if let Some(name) = names.get(0) {
+                if let Some(name) = names.first() {
                     let name = name.strip_prefix('/').unwrap_or(name);
-                    if let Ok(_) = ValidContainers::from_str(name) {
+                    if ValidContainers::from_str(name).is_ok() {
                         response.insert(name.to_string(), status.to_string());
                     }
                 }
             }
         }
 
-        return Ok(response);
+        Ok(response)
     }
 }
 
@@ -83,10 +84,10 @@ async fn start(ctx: Context<'_>, server: ValidContainers) -> Result<(), Error> {
         .start_container(container, None::<container::StartContainerOptions<String>>)
         .await;
 
-    if let Ok(_) = result {
-        ctx.say(format!("{}: started", container)).await?;
+    if result.is_ok() {
+        ctx.say(format!("{container}: started")).await?;
     } else {
-        ctx.say(format!("{}: failed to start", container)).await?;
+        ctx.say(format!("{container}: failed to start")).await?;
     }
     Ok(())
 }
@@ -98,15 +99,15 @@ async fn stop(ctx: Context<'_>, server: ValidContainers) -> Result<(), Error> {
     tracing::info!(container, operation = "stop");
 
     let result = ctx.data().docker.stop_container(container, None).await;
-    if let Err(_) = result {
-        ctx.say(format!("{}: stopped", container)).await?;
+    if result.is_ok() {
+        ctx.say(format!("{container}: stopped")).await?;
     } else {
-        ctx.say(format!("{}: failed to stop", container)).await?;
+        ctx.say(format!("{container}: failed to stop")).await?;
     }
     Ok(())
 }
 
-/// Get the logs of a minecraft server
+/// Get the last 10 lines of logs of a minecraft server
 #[poise::command(slash_command)]
 async fn logs(ctx: Context<'_>, server: ValidContainers) -> Result<(), Error> {
     let container: &str = server.into();
@@ -117,19 +118,19 @@ async fn logs(ctx: Context<'_>, server: ValidContainers) -> Result<(), Error> {
         .docker
         .logs(
             container,
-            Some(container::LogsOptions::<String> {
+            Some(container::LogsOptions {
                 stdout: true,
                 stderr: true,
+                timestamps: false,
+                tail: "10",
                 ..Default::default()
             }),
         )
+        .map_ok(|output| output.to_string())
+        .try_collect::<Vec<_>>()
         .await?;
 
-    let mut response = CreateEmbed::new().title(format!("Logs for {}", container));
-    for log in logs {
-        response = response.description(format!("```{}```", log));
-    }
-    ctx.send(CreateReply::default().embed(response)).await?;
+    ctx.say(format!("```{}```", logs.join("\n"))).await?;
     Ok(())
 }
 
