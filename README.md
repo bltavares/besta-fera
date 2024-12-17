@@ -4,6 +4,7 @@ Discord bot to manage Minecraft servers on my [homelab](https://github.com/bltav
 ## Available commands
 - `/start <server>`: Start a server
 - `/stop <server>`: Stop a server
+- `/logs <server>`: Get the recent logs of a server
 - `/status`: Get the status of a server
 
 ## Installation
@@ -14,7 +15,7 @@ Open the Discord Developer Portal and create a new bot. Use the token to configu
 Enable on OAuth2 the `bot` scope and `applications.commands` permissions: 
   - Slash Commands
   - Send Messages
-  - 
+
 Then paste the link on the channel to invite it to the server.
 
 ### Running
