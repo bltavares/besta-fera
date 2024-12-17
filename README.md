@@ -45,3 +45,15 @@ docker run -d --name besta-fera \
     --restart unless-stopped \
     ghcr.io/bltavares/besta-fera:latest
 ```
+
+## Linting
+
+To run linting checks locally, use the following commands:
+
+```bash
+# Check code formatting
+cargo fmt -- --check
+
+# Run clippy linter
+cargo clippy -- -D clippy::pedantic
+```
