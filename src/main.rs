@@ -106,6 +106,33 @@ async fn stop(ctx: Context<'_>, server: ValidContainers) -> Result<(), Error> {
     Ok(())
 }
 
+/// Get the logs of a minecraft server
+#[poise::command(slash_command)]
+async fn logs(ctx: Context<'_>, server: ValidContainers) -> Result<(), Error> {
+    let container: &str = server.into();
+    tracing::info!(container, operation = "logs");
+
+    let logs = ctx
+        .data()
+        .docker
+        .logs(
+            container,
+            Some(container::LogsOptions::<String> {
+                stdout: true,
+                stderr: true,
+                ..Default::default()
+            }),
+        )
+        .await?;
+
+    let mut response = CreateEmbed::new().title(format!("Logs for {}", container));
+    for log in logs {
+        response = response.description(format!("```{}```", log));
+    }
+    ctx.send(CreateReply::default().embed(response)).await?;
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::registry()
@@ -119,7 +146,7 @@ async fn main() {
     let intents = serenity::GatewayIntents::non_privileged();
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![status(), start(), stop()],
+            commands: vec![status(), start(), stop(), logs()],
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {
