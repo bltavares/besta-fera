@@ -32,7 +32,7 @@ jobs:
           args: -- --check
 
       - name: Run cargo clippy
-        uses: actions-rs/clippy-check@v1
+        uses: giraffate/clippy-action@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: -- -D clippy::pedantic
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          clippy_flags: -- -D clippy::pedantic
